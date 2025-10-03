@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mendelian Genetics Punnett Square Generator</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.5;
+      font-size: 16px;
+    }
+
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top left, rgba(142, 202, 230, 0.35), transparent 60%),
+        radial-gradient(circle at bottom right, rgba(255, 183, 3, 0.25), transparent 55%),
+        #f4f6fb;
+      color: #1f2933;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 2.5rem 1rem 4rem;
+      box-sizing: border-box;
+    }
+
+    .app {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 18px;
+      box-shadow: 0 16px 48px rgba(15, 23, 42, 0.18);
+      max-width: 960px;
+      width: 100%;
+      padding: 2.5rem 3rem 3rem;
+      box-sizing: border-box;
+      backdrop-filter: blur(12px);
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    h1 {
+      margin: 0 0 0.75rem;
+      font-size: clamp(2rem, 4vw, 2.75rem);
+      color: #0b7285;
+      letter-spacing: -0.02em;
+    }
+
+    p.tagline {
+      margin: 0;
+      font-size: 1.05rem;
+      color: #4b5563;
+    }
+
+    form {
+      display: grid;
+      gap: 1.5rem;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      margin-bottom: 2rem;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      font-weight: 600;
+      color: #334155;
+    }
+
+    input[type="text"] {
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      border-radius: 12px;
+      padding: 0.75rem 1rem;
+      font-size: 1rem;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #0ea5e9;
+      box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.18);
+    }
+
+    button {
+      grid-column: 1 / -1;
+      justify-self: center;
+      background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      padding: 0.85rem 2.75rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.2s ease;
+    }
+
+    button:hover,
+    button:focus-visible {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 32px rgba(14, 165, 233, 0.25);
+    }
+
+    .help {
+      grid-column: 1 / -1;
+      font-size: 0.95rem;
+      color: #475569;
+      background: rgba(14, 165, 233, 0.08);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+    }
+
+    .error {
+      grid-column: 1 / -1;
+      color: #dc2626;
+      background: rgba(248, 113, 113, 0.15);
+      border: 1px solid rgba(248, 113, 113, 0.3);
+      border-radius: 12px;
+      padding: 0.75rem 1rem;
+    }
+
+    .results {
+      display: none;
+      gap: 2rem;
+    }
+
+    .results.visible {
+      display: grid;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+      background: rgba(255, 255, 255, 0.85);
+      border-radius: 16px;
+      padding: 1.5rem;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 280px;
+    }
+
+    th,
+    td {
+      text-align: center;
+      padding: 0.75rem 1rem;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      font-feature-settings: "liga" 1, "kern" 1;
+      font-weight: 600;
+    }
+
+    th {
+      background: rgba(14, 165, 233, 0.12);
+      color: #0f172a;
+    }
+
+    td {
+      background: rgba(241, 245, 249, 0.75);
+      color: #1e293b;
+    }
+
+    .probabilities {
+      background: rgba(14, 116, 144, 0.07);
+      border-radius: 16px;
+      padding: 1.5rem;
+      border: 1px solid rgba(14, 116, 144, 0.2);
+    }
+
+    .probabilities h2 {
+      margin-top: 0;
+      color: #0f172a;
+      font-size: 1.4rem;
+    }
+
+    .probabilities ul {
+      margin: 0;
+      padding-left: 1.25rem;
+      display: grid;
+      gap: 0.5rem;
+    }
+
+    .probabilities li {
+      list-style: disc;
+      color: #0f172a;
+      font-weight: 500;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 1.75rem 1rem 3rem;
+      }
+
+      .app {
+        padding: 2rem 1.5rem 2.5rem;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>Punnett Square Visualizer</h1>
+      <p class="tagline">Enter the genotypes of two parents to discover possible offspring combinations.</p>
+    </header>
+    <form id="genetics-form" novalidate>
+      <label>
+        Parent 1 genotype
+        <input type="text" id="parent1" name="parent1" placeholder="e.g. AA or Aa" autocomplete="off" required />
+      </label>
+      <label>
+        Parent 2 genotype
+        <input type="text" id="parent2" name="parent2" placeholder="e.g. Aa" autocomplete="off" required />
+      </label>
+      <p class="help">Tip: Enter genotypes with pairs of alleles in order (for example AA, Aa, aa or AaBb). Both parents
+        should include the same number of alleles.</p>
+      <div class="error" id="error" role="alert" hidden></div>
+      <button type="submit">Create Punnett Square</button>
+    </form>
+
+    <section class="results" id="results" aria-live="polite">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr id="column-header-row">
+              <th scope="col">&nbsp;</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </div>
+      <div class="probabilities" id="probabilities">
+        <h2>Genotype Probabilities</h2>
+        <ul id="probability-list"></ul>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const form = document.getElementById("genetics-form");
+    const parent1Input = document.getElementById("parent1");
+    const parent2Input = document.getElementById("parent2");
+    const errorBox = document.getElementById("error");
+    const resultsSection = document.getElementById("results");
+    const tableHeaderRow = document.getElementById("column-header-row");
+    const tableBody = document.getElementById("table-body");
+    const probabilityList = document.getElementById("probability-list");
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const parent1Raw = parent1Input.value.trim();
+      const parent2Raw = parent2Input.value.trim();
+
+      const parent1 = sanitizeGenotype(parent1Raw);
+      const parent2 = sanitizeGenotype(parent2Raw);
+
+      const validationError = validateInputs(parent1, parent2);
+      if (validationError) {
+        showError(validationError);
+        return;
+      }
+
+      hideError();
+
+      const gametes1 = generateGametes(parent1);
+      const gametes2 = generateGametes(parent2);
+
+      const punnett = buildPunnettSquare(gametes1, gametes2);
+      renderTable(gametes1, gametes2, punnett);
+      renderProbabilities(punnett);
+      resultsSection.classList.add("visible");
+    });
+
+    function sanitizeGenotype(input) {
+      return input.replace(/[^A-Za-z]/g, "");
+    }
+
+    function validateInputs(parent1, parent2) {
+      if (!parent1 || !parent2) {
+        return "Please enter the genotype for both parents.";
+      }
+
+      if (parent1.length !== parent2.length) {
+        return "Both parents must have the same number of alleles.";
+      }
+
+      if (parent1.length % 2 !== 0) {
+        return "Enter alleles in pairs (e.g., AA, Aa, or AaBb).";
+      }
+
+      return "";
+    }
+
+    function showError(message) {
+      errorBox.textContent = message;
+      errorBox.hidden = false;
+      resultsSection.classList.remove("visible");
+    }
+
+    function hideError() {
+      errorBox.hidden = true;
+      errorBox.textContent = "";
+    }
+
+    function generateGametes(genotype) {
+      const loci = [];
+      for (let i = 0; i < genotype.length; i += 2) {
+        const allelePair = [genotype[i], genotype[i + 1]].filter(Boolean);
+        loci.push(allelePair);
+      }
+
+      return cartesianProduct(loci);
+    }
+
+    function cartesianProduct(arrays) {
+      return arrays.reduce((acc, alleles) => {
+        const next = [];
+        acc.forEach((prefix) => {
+          alleles.forEach((allele) => {
+            next.push(prefix + allele);
+          });
+        });
+        return next;
+      }, [""]);
+    }
+
+    function buildPunnettSquare(gametes1, gametes2) {
+      return gametes1.map((gamete1) =>
+        gametes2.map((gamete2) => combineGametes(gamete1, gamete2))
+      );
+    }
+
+    function combineGametes(gamete1, gamete2) {
+      let genotype = "";
+      for (let i = 0; i < gamete1.length; i++) {
+        const pair = [gamete1[i], gamete2[i]].sort(compareAlleles);
+        genotype += pair.join("");
+      }
+      return genotype;
+    }
+
+    function compareAlleles(a, b) {
+      if (a === b) return 0;
+      const aUpper = a === a.toUpperCase();
+      const bUpper = b === b.toUpperCase();
+      if (aUpper && !bUpper) return -1;
+      if (!aUpper && bUpper) return 1;
+      return a.localeCompare(b, undefined, { sensitivity: "base" });
+    }
+
+    function renderTable(gametes1, gametes2, punnett) {
+      tableHeaderRow.innerHTML = "<th scope=\"col\">Parent 1 \u2192<br />Parent 2 \u2193</th>";
+      gametes2.forEach((gamete) => {
+        const th = document.createElement("th");
+        th.scope = "col";
+        th.textContent = gamete;
+        tableHeaderRow.appendChild(th);
+      });
+
+      tableBody.innerHTML = "";
+      punnett.forEach((row, rowIndex) => {
+        const tr = document.createElement("tr");
+        const headerCell = document.createElement("th");
+        headerCell.scope = "row";
+        headerCell.textContent = gametes1[rowIndex];
+        tr.appendChild(headerCell);
+        row.forEach((genotype) => {
+          const td = document.createElement("td");
+          td.textContent = genotype;
+          tr.appendChild(td);
+        });
+        tableBody.appendChild(tr);
+      });
+    }
+
+    function renderProbabilities(punnett) {
+      const counts = new Map();
+      punnett.flat().forEach((genotype) => {
+        const current = counts.get(genotype) ?? 0;
+        counts.set(genotype, current + 1);
+      });
+
+      const total = punnett.length * (punnett[0]?.length || 0);
+      probabilityList.innerHTML = "";
+
+      Array.from(counts.entries())
+        .sort(([a], [b]) => a.localeCompare(b, undefined, { sensitivity: "base" }))
+        .forEach(([genotype, count]) => {
+          const fraction = simplifyFraction(count, total);
+          const percentage = ((count / total) * 100).toFixed(1);
+          const li = document.createElement("li");
+          const formattedPercentage = percentage.endsWith(".0")
+            ? parseFloat(percentage).toString()
+            : percentage;
+          li.textContent = `${genotype} – ${fraction} (${formattedPercentage}%)`;
+          probabilityList.appendChild(li);
+        });
+    }
+
+    function simplifyFraction(numerator, denominator) {
+      const divisor = gcd(numerator, denominator);
+      return `${numerator / divisor}/${denominator / divisor}`;
+    }
+
+    function gcd(a, b) {
+      let x = a;
+      let y = b;
+      while (y !== 0) {
+        const temp = y;
+        y = x % y;
+        x = temp;
+      }
+      return x;
+    }
+  </script>
+</body>
+</html>
